@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventmanager-deployment
+  labels:
+    app: eventmanager
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: eventmanager
+  template:
+    metadata:
+      labels:
+        app: eventmanager
+    spec:
+      containers:
+      - name: eventmanager
+        image: eventmanager:latest
+        imagePullPolicy: IfNotPresent  # Asegúrate de que esta línea esté presente
+        ports:
+        - containerPort: 8080
