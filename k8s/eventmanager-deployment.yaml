@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventmanager-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: eventmanager
+  template:
+    metadata:
+      labels:
+        app: eventmanager
+    spec:
+      containers:
+        - name: eventmanager
+          image: eventmanager:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-service:3306/eventdb"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "rootpassword"
