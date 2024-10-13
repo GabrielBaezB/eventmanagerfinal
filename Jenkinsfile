@@ -46,22 +46,31 @@ pipeline {
         stage('Create Kind Cluster') {
             steps {
                 script {
-                    // Ensure KIND_BIN is in the PATH for subsequent steps
-                    sh 'export PATH=$PATH:${KIND_BIN} && kind create cluster --name ${KUBE_CONTEXT} || echo "The cluster already exists"'
+                    // Set the PATH for the current shell
+                    sh '''
+                        export PATH=$PATH:${KIND_BIN}
+                        if kind get clusters | grep -q "${KUBE_CONTEXT}"; then
+                            echo "The cluster already exists."
+                        else
+                            kind create cluster --name ${KUBE_CONTEXT}
+                        fi
+                    '''
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    // Load the Docker image into Kind
-                    sh "kind load docker-image eventmanager:latest --name ${KUBE_CONTEXT}"
-                    
-                    // Apply deployment to Kubernetes
-                    sh "kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}"
-                    sh "kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}"
-                    sh "kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}"
-                    sh "kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}"
+                    // Load the Docker image into Kind and apply configurations
+                    sh '''
+                        export PATH=$PATH:${KIND_BIN}
+                        kind load docker-image eventmanager:latest --name ${KUBE_CONTEXT}
+
+                        kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}
+                        kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}
+                        kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}
+                        kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}
+                    '''
                 }
             }
         }
