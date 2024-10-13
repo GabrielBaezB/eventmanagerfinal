@@ -2,6 +2,15 @@ pipeline {
     agent any
 
     stages {
+        stage('Compile') {
+            steps {
+                script {
+                    // Compilar el proyecto y empaquetarlo en un JAR
+                    sh 'mvn clean package'
+                }
+            }
+        }
+
         stage('Build') {
             steps {
                 script {
@@ -10,6 +19,7 @@ pipeline {
                 }
             }
         }
+
         stage('Test') {
             steps {
                 script {
@@ -18,6 +28,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy') {
             steps {
                 script {
