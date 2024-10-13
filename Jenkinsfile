@@ -1,16 +1,20 @@
 pipeline {
     agent any
 
+    environment {
+        KIND_BIN = '/home/jenkins/kind' // Asegúrate de que este directorio tenga permisos
+        KUBE_CONTEXT = 'kind-eventmanager' // Cambia este nombre si usas un nombre diferente
+    }
+
     stages {
         stage('Compile') {
             steps {
                 script {
-                    // Compilar el proyecto y empaquetarlo en un JAR
+                    // Ejecutar la compilación usando Maven
                     sh 'mvn clean package'
                 }
             }
         }
-
         stage('Build') {
             steps {
                 script {
@@ -19,7 +23,6 @@ pipeline {
                 }
             }
         }
-
         stage('Test') {
             steps {
                 script {
@@ -28,28 +31,31 @@ pipeline {
                 }
             }
         }
-
-        stage('Install Kind') {
+        stage('Setup Kind') {
             steps {
                 script {
-                    // Descargar Kind a un directorio accesible en el espacio de trabajo
-                    sh 'curl -Lo kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64'
-                    sh 'chmod +x kind' // Dar permisos de ejecución
-                    // No mover a /usr/local/bin, simplemente usar el archivo en el directorio actual
+                    // Instalar Kind
+                    sh '''
+                        curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+                        chmod +x /tmp/kind
+                        mv /tmp/kind ${KIND_BIN}
+                        export PATH=$PATH:${KIND_BIN}
+                        kind create cluster --name ${KUBE_CONTEXT} || echo "El clúster ya existe"
+                    '''
                 }
             }
         }
-
         stage('Deploy') {
             steps {
                 script {
-                    // Cargar la imagen a Kind usando el binario descargado
-                    sh './kind load docker-image eventmanager:latest --name eventmanager'
+                    // Cargar la imagen en Kind
+                    sh "${KIND_BIN} load docker-image eventmanager:latest --name ${KUBE_CONTEXT}"
+                    
                     // Aplicar despliegue a Kubernetes
-                    sh 'kubectl apply -f k8s/mysql-deployment.yaml'
-                    sh 'kubectl apply -f k8s/mysql-service.yaml'
-                    sh 'kubectl apply -f k8s/eventmanager-deployment.yaml'
-                    sh 'kubectl apply -f k8s/eventmanager-service.yaml'
+                    sh 'kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}'
+                    sh 'kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}'
+                    sh 'kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}'
+                    sh 'kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}'
                 }
             }
         }
