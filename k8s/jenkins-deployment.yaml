@@ -13,12 +13,18 @@ spec:
       labels:
         app: jenkins
     spec:
+      initContainers:
+      - name: init-permissions
+        image: busybox
+        command: ['sh', '-c', 'chown -R 1000:1000 /var/jenkins_home']
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
       containers:
       - name: jenkins
-        image: jenkins/jenkins:lts  # Usamos la imagen oficial de Jenkins
+        image: jenkins/jenkins:lts
         ports:
         - containerPort: 8080
-        - containerPort: 50000
         env:
           - name: JENKINS_OPTS
             value: "-Djenkins.install.runSetupWizard=false"
@@ -26,6 +32,6 @@ spec:
           - name: jenkins-home
             mountPath: /var/jenkins_home
       volumes:
-        - name: jenkins-home
-          persistentVolumeClaim:
-            claimName: jenkins-pvc  # Asegúrate de tener un PVC configurado
+      - name: jenkins-home
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
