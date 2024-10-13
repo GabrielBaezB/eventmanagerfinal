@@ -7,10 +7,25 @@ pipeline {
     }
 
     stages {
+        stage('Install kubectl') {
+            steps {
+                script {
+                    // Instalar kubectl
+                    echo 'Instalando kubectl...'
+                    sh '''
+                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+                        chmod +x ./kubectl
+                        mv ./kubectl /usr/local/bin/kubectl
+                    '''
+                }
+            }
+        }
+
         stage('Compile') {
             steps {
                 script {
                     // Ejecutar la compilación usando Maven
+                    echo 'Compilando el proyecto con Maven...'
                     sh 'mvn clean package'
                 }
             }
@@ -19,6 +34,7 @@ pipeline {
             steps {
                 script {
                     // Construir la imagen Docker
+                    echo 'Construyendo la imagen Docker...'
                     sh 'docker build -t eventmanager:latest .'
                 }
             }
@@ -28,6 +44,7 @@ pipeline {
                 script {
                     // Aquí puedes agregar tus comandos para ejecutar pruebas, si es necesario
                     echo 'Ejecutando pruebas...'
+                    // sh 'mvn test' // Descomenta si deseas ejecutar pruebas
                 }
             }
         }
@@ -35,6 +52,7 @@ pipeline {
             steps {
                 script {
                     // Instalar Kind
+                    echo 'Configurando Kind...'
                     sh '''
                         curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
                         chmod +x /tmp/kind
@@ -51,18 +69,20 @@ pipeline {
                 script {
                     try {
                         // Cargar la imagen en Kind
+                        echo 'Cargando la imagen en Kind...'
                         sh '''
                             export PATH=$PATH:${KIND_BIN}
                             kind load docker-image eventmanager:latest --name ${KUBE_CONTEXT}
                         '''
                         
                         // Aplicar despliegue a Kubernetes
+                        echo 'Aplicando despliegues a Kubernetes...'
                         sh 'kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}'
                         sh 'kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}'
                         sh 'kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}'
                         sh 'kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}'
                     } catch (Exception e) {
-                        echo "Failed to load Docker image or apply Kubernetes resources: ${e.getMessage()}"
+                        echo "Falló al cargar la imagen Docker o aplicar los recursos de Kubernetes: ${e.getMessage()}"
                     }
                 }
             }
