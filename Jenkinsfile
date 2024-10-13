@@ -4,6 +4,7 @@ pipeline {
     environment {
         KIND_BIN = '/var/jenkins_home/kind' // Asegúrate de que este directorio tenga permisos
         KUBE_CONTEXT = 'kind-eventmanager' // Cambia este nombre si usas un nombre diferente
+        KUBECTL_BIN = '/var/jenkins_home/kuber' // Ruta de kubectl
     }
 
     stages {
@@ -15,7 +16,7 @@ pipeline {
                     sh '''
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                         chmod +x ./kubectl
-                        mv ./kubectl /var/jenkins_home/kuber
+                        mv ./kubectl ${KUBECTL_BIN}
                     '''
                 }
             }
@@ -71,7 +72,7 @@ pipeline {
                         // Cargar la imagen en Kind
                         echo 'Cargando la imagen en Kind...'
                         sh '''
-                            export PATH=$PATH:${KIND_BIN}
+                            export PATH=$PATH:${KIND_BIN}:${KUBECTL_BIN}
                             kind load docker-image eventmanager:latest --name ${KUBE_CONTEXT}
                         '''
                         
