@@ -45,7 +45,7 @@ pipeline {
                             artifacts: [
                                 [artifactId: 'eventmanager',
                                 classifier: '',
-                                file: 'target/eventmanager.jar',
+                                file: 'target/eventmanager-0.0.1-SNAPSHOT.jar',
                                 type: 'jar']
                             ]
                         )
