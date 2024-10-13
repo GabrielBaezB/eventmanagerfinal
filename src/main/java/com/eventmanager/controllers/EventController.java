@@ -3,35 +3,30 @@ package com.eventmanager.controllers;
 import com.eventmanager.models.Event;
 import com.eventmanager.repositories.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
-@RequestMapping("/events")
+@RestController
+@RequestMapping("/api/events")
+@CrossOrigin(origins = "http://localhost:4200")  // Permitir Angular
 public class EventController {
 
     @Autowired
     private EventRepository eventRepository;
 
     @GetMapping
-    public String listEvents(Model model) {
-        List<Event> events = eventRepository.findAll();
-        model.addAttribute("events", events);
-        return "events/list"; // Vista Thymeleaf
-    }
-
-    @GetMapping("/new")
-    public String showEventForm(Model model) {
-        model.addAttribute("event", new Event());
-        return "events/form"; // Vista Thymeleaf
+    public List<Event> getAllEvents() {
+        return eventRepository.findAll();
     }
 
     @PostMapping
-    public String saveEvent(@ModelAttribute Event event) {
-        eventRepository.save(event);
-        return "redirect:/events"; // Redirigir a la lista de eventos
+    public Event createEvent(@RequestBody Event event) {
+        return eventRepository.save(event);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteEvent(@PathVariable Long id) {
+        eventRepository.deleteById(id);
     }
 }

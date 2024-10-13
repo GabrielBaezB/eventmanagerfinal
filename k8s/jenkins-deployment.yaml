@@ -18,12 +18,14 @@ spec:
         image: jenkins/jenkins:lts  # Usamos la imagen oficial de Jenkins
         ports:
         - containerPort: 8080
+        - containerPort: 50000
         env:
           - name: JENKINS_OPTS
-            value: --httpPort=8080
+            value: "-Djenkins.install.runSetupWizard=false"
         volumeMounts:
           - name: jenkins-home
             mountPath: /var/jenkins_home
       volumes:
         - name: jenkins-home
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: jenkins-pvc  # Asegúrate de tener un PVC configurado

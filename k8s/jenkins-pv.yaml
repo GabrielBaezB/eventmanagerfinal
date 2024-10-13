@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jenkins-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard  # Asegúrate de que coincida con el PVC
+  hostPath:
+    path: "/mnt/data/jenkins"  # Si quieres mantener la ruta del host
+
