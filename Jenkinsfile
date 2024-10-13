@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     environment {
-        KIND_BIN = '/var/jenkins_home/kind' // Path to the kind binary
-        KUBE_CONTEXT = 'kind-eventmanager' // Change this name if you are using a different name
+        KIND_BIN = '/var/jenkins_home/kind' // Asegúrate de que este directorio tenga permisos
+        KUBE_CONTEXT = 'kind-eventmanager' // Cambia este nombre si usas un nombre diferente
     }
 
     stages {
         stage('Compile') {
             steps {
                 script {
-                    // Execute the build using Maven
+                    // Ejecutar la compilación usando Maven
                     sh 'mvn clean package'
                 }
             }
@@ -18,7 +18,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Build the Docker image
+                    // Construir la imagen Docker
                     sh 'docker build -t eventmanager:latest .'
                 }
             }
@@ -26,34 +26,22 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Add commands to run tests if necessary
-                    echo 'Running tests...'
+                    // Aquí puedes agregar tus comandos para ejecutar pruebas, si es necesario
+                    echo 'Ejecutando pruebas...'
                 }
             }
         }
         stage('Setup Kind') {
             steps {
                 script {
-                    // Install Kind
+                    // Instalar Kind
                     sh '''
                         curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
                         chmod +x /tmp/kind
                         mv /tmp/kind ${KIND_BIN}
-                    '''
-                }
-            }
-        }
-        stage('Create Kind Cluster') {
-            steps {
-                script {
-                    // Set the PATH for the current shell
-                    sh '''
                         export PATH=$PATH:${KIND_BIN}
-                        if kind get clusters | grep -q "${KUBE_CONTEXT}"; then
-                            echo "The cluster already exists."
-                        else
-                            kind create cluster --name ${KUBE_CONTEXT}
-                        fi
+                        kind delete cluster --name ${KUBE_CONTEXT} || echo "No existing cluster to delete"
+                        kind create cluster --name ${KUBE_CONTEXT}
                     '''
                 }
             }
@@ -61,16 +49,21 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Load the Docker image into Kind and apply configurations
-                    sh '''
-                        export PATH=$PATH:${KIND_BIN}
-                        kind load docker-image eventmanager:latest --name ${KUBE_CONTEXT}
-
-                        kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}
-                        kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}
-                        kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}
-                        kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}
-                    '''
+                    try {
+                        // Cargar la imagen en Kind
+                        sh '''
+                            export PATH=$PATH:${KIND_BIN}
+                            kind load docker-image eventmanager:latest --name ${KUBE_CONTEXT}
+                        '''
+                        
+                        // Aplicar despliegue a Kubernetes
+                        sh 'kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}'
+                        sh 'kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}'
+                        sh 'kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}'
+                        sh 'kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}'
+                    } catch (Exception e) {
+                        echo "Failed to load Docker image or apply Kubernetes resources: ${e.getMessage()}"
+                    }
                 }
             }
         }
@@ -78,10 +71,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully.'
+            echo 'Pipeline completado con éxito.'
         }
         failure {
-            echo 'The pipeline failed.'
+            echo 'El pipeline falló.'
         }
     }
 }
