@@ -29,6 +29,17 @@ pipeline {
             }
         }
 
+        stage('Install Kind') {
+            steps {
+                script {
+                    // Descargar Kind a un directorio accesible
+                    sh 'curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64'
+                    sh 'chmod +x /tmp/kind'
+                    sh 'mv /tmp/kind /usr/local/bin/kind'
+                }
+            }
+        }
+
         stage('Deploy') {
             steps {
                 script {
