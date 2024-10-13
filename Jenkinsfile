@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        KIND_BIN = '/home/jenkins/kind' // Asegúrate de que este directorio tenga permisos
+        KIND_BIN = '/var/jenkins_home' // Asegúrate de que este directorio tenga permisos
         KUBE_CONTEXT = 'kind-eventmanager' // Cambia este nombre si usas un nombre diferente
     }
 
