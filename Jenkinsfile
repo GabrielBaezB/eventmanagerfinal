@@ -17,6 +17,9 @@ pipeline {
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                         chmod +x ./kubectl
                         mv ./kubectl ${KUBECTL_BIN}
+                        echo "Verificando kubectl..."
+                        ls -l ${KUBECTL_BIN}
+                        ${KUBECTL_BIN}/kubectl version --client  # Verifica la versión de kubectl
                     '''
                 }
             }
@@ -31,6 +34,7 @@ pipeline {
                 }
             }
         }
+
         stage('Build') {
             steps {
                 script {
@@ -40,6 +44,7 @@ pipeline {
                 }
             }
         }
+
         stage('Test') {
             steps {
                 script {
@@ -49,6 +54,7 @@ pipeline {
                 }
             }
         }
+
         stage('Setup Kind') {
             steps {
                 script {
@@ -65,6 +71,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy') {
             steps {
                 script {
@@ -78,10 +85,14 @@ pipeline {
                         
                         // Aplicar despliegue a Kubernetes
                         echo 'Aplicando despliegues a Kubernetes...'
-                        sh 'kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}'
-                        sh 'kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}'
-                        sh 'kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}'
-                        sh 'kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}'
+                        sh '''
+                            export PATH=$PATH:${KIND_BIN}:${KUBECTL_BIN}
+                            kubectl config use-context ${KUBE_CONTEXT}  # Asegúrate de usar el contexto correcto
+                            kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}
+                            kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}
+                            kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}
+                            kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}
+                        '''
                     } catch (Exception e) {
                         echo "Falló al cargar la imagen Docker o aplicar los recursos de Kubernetes: ${e.getMessage()}"
                     }
