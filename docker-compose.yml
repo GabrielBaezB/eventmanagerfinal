@@ -27,3 +27,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      
+  frontend:
+    build:
+      context: ../Front-End-Reservas
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - eventmanager

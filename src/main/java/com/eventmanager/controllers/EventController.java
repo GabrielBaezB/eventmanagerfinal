@@ -10,6 +10,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/events")
 @CrossOrigin(origins = "http://localhost:4200")  // Permitir Angular
+@CrossOrigin(origins = "*")  // utilizando docker compose
+
 public class EventController {
 
     @Autowired
