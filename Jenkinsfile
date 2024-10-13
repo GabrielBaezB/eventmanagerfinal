@@ -69,6 +69,8 @@ pipeline {
             steps {
                 script {
                     echo 'Esperando a que el clúster Kind esté listo...'
+                    // Asegúrate de que el PATH esté configurado correctamente
+                    env.PATH = "${env.PATH}:${KIND_BIN}:${KUBECTL_BIN}"
                     def isReady = false
                     for (int i = 0; i < 10; i++) {
                         try {
