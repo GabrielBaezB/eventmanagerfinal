@@ -65,6 +65,28 @@ pipeline {
             }
         }
 
+        stage('Wait for Kind') {
+            steps {
+                script {
+                    echo 'Esperando a que el clúster Kind esté listo...'
+                    def isReady = false
+                    for (int i = 0; i < 10; i++) {
+                        try {
+                            sh 'kubectl cluster-info'
+                            isReady = true
+                            break
+                        } catch (Exception e) {
+                            echo "Intentando conectar al clúster Kind... (${i + 1}/10)"
+                            sleep(5)
+                        }
+                    }
+                    if (!isReady) {
+                        error("El clúster Kind no está listo después de varios intentos.")
+                    }
+                }
+            }
+        }
+
         stage('Deploy') {
             steps {
                 script {
@@ -75,17 +97,14 @@ pipeline {
                             kind load docker-image eventmanager:latest --name kind-kind-eventmanager
                         '''
                         
-                        // Espera para asegurar que el servidor de la API esté listo
-                        sleep 10 
-
                         echo 'Aplicando despliegues a Kubernetes...'
                         sh '''
                             export PATH=$PATH:${KIND_BIN}:${KUBECTL_BIN}
                             kubectl config use-context ${KUBE_CONTEXT}
-                            kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT} --validate=false
-                            kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT} --validate=false
-                            kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT} --validate=false
-                            kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT} --validate=false
+                            kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT} --validate=false || { echo "Error aplicando mysql-deployment"; exit 1; }
+                            kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT} --validate=false || { echo "Error aplicando mysql-service"; exit 1; }
+                            kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT} --validate=false || { echo "Error aplicando eventmanager-deployment"; exit 1; }
+                            kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT} --validate=false || { echo "Error aplicando eventmanager-service"; exit 1; }
                         '''
                     } catch (Exception e) {
                         echo "Falló al cargar la imagen Docker o aplicar los recursos de Kubernetes: ${e.getMessage()}"
