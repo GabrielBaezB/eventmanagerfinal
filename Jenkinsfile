@@ -32,10 +32,10 @@ pipeline {
         stage('Install Kind') {
             steps {
                 script {
-                    // Descargar Kind a un directorio accesible
-                    sh 'curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64'
-                    sh 'chmod +x /tmp/kind'
-                    sh 'mv /tmp/kind /usr/local/bin/kind'
+                    // Descargar Kind a un directorio accesible en el espacio de trabajo
+                    sh 'curl -Lo kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64'
+                    sh 'chmod +x kind' // Dar permisos de ejecución
+                    // No mover a /usr/local/bin, simplemente usar el archivo en el directorio actual
                 }
             }
         }
@@ -43,8 +43,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Cargar la imagen a Kind
-                    sh 'kind load docker-image eventmanager:latest --name eventmanager'
+                    // Cargar la imagen a Kind usando el binario descargado
+                    sh './kind load docker-image eventmanager:latest --name eventmanager'
                     // Aplicar despliegue a Kubernetes
                     sh 'kubectl apply -f k8s/mysql-deployment.yaml'
                     sh 'kubectl apply -f k8s/mysql-service.yaml'
