@@ -2,24 +2,22 @@ pipeline {
     agent any
 
     environment {
-        KIND_BIN = '/var/jenkins_home/kind' // Asegúrate de que este directorio tenga permisos
-        KUBE_CONTEXT = 'kind-eventmanager' // Cambia este nombre si usas un nombre diferente
-        KUBECTL_BIN = '/var/jenkins_home/kuber' // Ruta de kubectl
+        KIND_BIN = '/var/jenkins_home/kind'
+        KUBE_CONTEXT = 'kind-kind-eventmanager' // Cambia aquí para usar el contexto correcto
+        KUBECTL_BIN = '/var/jenkins_home/kuber'
     }
 
     stages {
         stage('Install kubectl') {
             steps {
                 script {
-                    // Instalar kubectl
                     echo 'Instalando kubectl...'
                     sh '''
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                         chmod +x ./kubectl
                         mv ./kubectl ${KUBECTL_BIN}
                         echo "Verificando kubectl..."
-                        ls -l ${KUBECTL_BIN}
-                        ${KUBECTL_BIN}/kubectl version --client  # Verifica la versión de kubectl
+                        ${KUBECTL_BIN}/kubectl version --client
                     '''
                 }
             }
@@ -28,7 +26,6 @@ pipeline {
         stage('Compile') {
             steps {
                 script {
-                    // Ejecutar la compilación usando Maven
                     echo 'Compilando el proyecto con Maven...'
                     sh 'mvn clean package'
                 }
@@ -38,7 +35,6 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Construir la imagen Docker
                     echo 'Construyendo la imagen Docker...'
                     sh 'docker build -t eventmanager:latest .'
                 }
@@ -48,7 +44,6 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Aquí puedes agregar tus comandos para ejecutar pruebas, si es necesario
                     echo 'Ejecutando pruebas...'
                     // sh 'mvn test' // Descomenta si deseas ejecutar pruebas
                 }
@@ -58,15 +53,14 @@ pipeline {
         stage('Setup Kind') {
             steps {
                 script {
-                    // Instalar Kind
                     echo 'Configurando Kind...'
                     sh '''
                         curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
                         chmod +x /tmp/kind
                         mv /tmp/kind ${KIND_BIN}
                         export PATH=$PATH:${KIND_BIN}
-                        kind delete cluster --name ${KUBE_CONTEXT} || echo "No existing cluster to delete"
-                        kind create cluster --name ${KUBE_CONTEXT}
+                        kind delete cluster --name kind-kind-eventmanager || echo "No existing cluster to delete"
+                        kind create cluster --name kind-kind-eventmanager
                     '''
                 }
             }
@@ -76,18 +70,16 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Cargar la imagen en Kind
                         echo 'Cargando la imagen en Kind...'
                         sh '''
                             export PATH=$PATH:${KIND_BIN}:${KUBECTL_BIN}
-                            kind load docker-image eventmanager:latest --name ${KUBE_CONTEXT}
+                            kind load docker-image eventmanager:latest --name kind-kind-eventmanager
                         '''
                         
-                        // Aplicar despliegue a Kubernetes
                         echo 'Aplicando despliegues a Kubernetes...'
                         sh '''
                             export PATH=$PATH:${KIND_BIN}:${KUBECTL_BIN}
-                            kubectl config use-context ${KUBE_CONTEXT}  # Asegúrate de usar el contexto correcto
+                            kubectl config use-context ${KUBE_CONTEXT}
                             kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}
                             kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}
                             kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}
