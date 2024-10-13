@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         KIND_BIN = '/var/jenkins_home/kind'
-        KUBE_CONTEXT = 'kind-kind-eventmanager' // Cambia aquí para usar el contexto correcto
+        KUBE_CONTEXT = 'kind-kind-eventmanager'
         KUBECTL_BIN = '/var/jenkins_home/kuber'
     }
 
@@ -45,7 +45,6 @@ pipeline {
             steps {
                 script {
                     echo 'Ejecutando pruebas...'
-                    // sh 'mvn test' // Descomenta si deseas ejecutar pruebas
                 }
             }
         }
@@ -76,14 +75,17 @@ pipeline {
                             kind load docker-image eventmanager:latest --name kind-kind-eventmanager
                         '''
                         
+                        // Espera para asegurar que el servidor de la API esté listo
+                        sleep 10 
+
                         echo 'Aplicando despliegues a Kubernetes...'
                         sh '''
                             export PATH=$PATH:${KIND_BIN}:${KUBECTL_BIN}
                             kubectl config use-context ${KUBE_CONTEXT}
-                            kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT}
-                            kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT}
-                            kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT}
-                            kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT}
+                            kubectl apply -f k8s/mysql-deployment.yaml --context ${KUBE_CONTEXT} --validate=false
+                            kubectl apply -f k8s/mysql-service.yaml --context ${KUBE_CONTEXT} --validate=false
+                            kubectl apply -f k8s/eventmanager-deployment.yaml --context ${KUBE_CONTEXT} --validate=false
+                            kubectl apply -f k8s/eventmanager-service.yaml --context ${KUBE_CONTEXT} --validate=false
                         '''
                     } catch (Exception e) {
                         echo "Falló al cargar la imagen Docker o aplicar los recursos de Kubernetes: ${e.getMessage()}"
