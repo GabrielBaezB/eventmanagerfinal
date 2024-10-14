@@ -22,3 +22,10 @@ spec:
             value: eventdb
         ports:
         - containerPort: 3306
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql # Ruta donde MySQL almacena sus datos
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc # Vincula el PVC a este volumen
