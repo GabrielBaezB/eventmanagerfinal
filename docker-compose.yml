@@ -23,10 +23,9 @@ services:
       dockerfile: Dockerfile
       image: ${FRONTEND_IMAGE_NAME}  # Usar la variable de imagen
     ports:
-      - "4200:80"  # Cambia el puerto según la configuración de tu frontend
 
   db:
-    image: mysql:5.7
+    image: mysql:latest
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
