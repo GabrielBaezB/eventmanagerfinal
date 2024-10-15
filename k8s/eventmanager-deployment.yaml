@@ -43,6 +43,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: eventmanager-frontend  # Usa el nombre de la imagen
+        image: eventmanager-frontend # Usa el nombre de la imagen
+        imagePullPolicy: Never  
         ports:
         - containerPort: 80
