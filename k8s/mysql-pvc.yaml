@@ -7,4 +7,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi # Solicitud de almacenamiento
+      storage: 1Gi # Solicitud de almacenamiento

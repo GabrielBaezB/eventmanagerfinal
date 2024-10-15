@@ -4,9 +4,9 @@ metadata:
   name: mysql-pv
 spec:
   capacity:
-    storage: 10Gi # Tamaño del volumen
+    storage: 1Gi # Tamaño del volumen
   accessModes:
     - ReadWriteOnce # Solo puede ser montado por un nodo en modo lectura/escritura
   persistentVolumeReclaimPolicy: Retain # El PV se mantiene incluso si se elimina el PVC
   hostPath:
-    path: /mnt/data # Ruta local en el nodo (para entornos de desarrollo)
+    path: /mnt/data/mysql # Ruta local en el nodo (para entornos de desarrollo)

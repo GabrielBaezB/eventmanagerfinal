@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eventmanager-deployment
+  name: eventmanager-backend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: eventmanager
+      app: eventmanager-backend
   template:
     metadata:
       labels:
-        app: eventmanager
+        app: eventmanager-backend
     spec:
       containers:
-        - name: eventmanager
-          image: eventmanager:latest
+        - name: backend
+          image: eventmanager-backend
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
@@ -25,3 +25,24 @@ spec:
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
               value: "rootpassword"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventmanager-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eventmanager-frontend
+  template:
+    metadata:
+      labels:
+        app: eventmanager-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: eventmanager-frontend  # Usa el nombre de la imagen
+        ports:
+        - containerPort: 80

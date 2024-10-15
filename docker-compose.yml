@@ -2,10 +2,11 @@ version: '3.8'
 
 services:
   eventmanager:
-    image: eventmanager
+    image: eventmanager-backend  # Especifica el nombre de la imagen de tu backend
     build:
-      context: .
+      context: ./backend  # Cambia a la carpeta de tu backend
       dockerfile: Dockerfile
+      image: ${BACKEND_IMAGE_NAME}  # Usar la variable de imagen
     ports:
       - "8080:8080"
     depends_on:
@@ -15,8 +16,17 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: rootpassword
 
+  frontend:
+    image: eventmanager-frontend  # Especifica el nombre de la imagen de tu frontend
+    build:
+      context: ./frontend  # Cambia a la carpeta de tu frontend
+      dockerfile: Dockerfile
+      image: ${FRONTEND_IMAGE_NAME}  # Usar la variable de imagen
+    ports:
+      - "4200:80"  # Cambia el puerto según la configuración de tu frontend
+
   db:
-    image: mysql:latest
+    image: mysql:5.7
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword

@@ -1,12 +1,37 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: eventmanager-service
+  name: mysql
 spec:
-  type: NodePort
+  ports:
+    - port: 3306
+      targetPort: 3306
   selector:
-    app: eventmanager
+    app: mysql  # Debe coincidir con la etiqueta del pod de MySQL
+  type: ClusterIP  # Accesible solo dentro del clúster
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eventmanager-backend
+spec:
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 30080
+  selector:
+    app: eventmanager-backend  # Debe coincidir con la etiqueta del pod del backend
+  type: ClusterIP  # Accesible solo dentro del clúster
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eventmanager-frontend
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: eventmanager-frontend  # Debe coincidir con la etiqueta del pod del frontend
+  type: LoadBalancer  # Esto permite acceso externo al frontend
