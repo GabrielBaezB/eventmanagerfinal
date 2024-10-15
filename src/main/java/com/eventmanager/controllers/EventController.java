@@ -11,7 +11,6 @@ import java.util.List;
 @RequestMapping("/api/events")
 @CrossOrigin(origins = "http://localhost:4200")  // Permitir Angular
 public class EventController {
-
     @Autowired
     private EventRepository eventRepository;
 

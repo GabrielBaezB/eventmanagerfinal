@@ -13,14 +13,14 @@ spec:
         app: eventmanager-backend
     spec:
       containers:
-        - name: backend
+        - name: eventmanager-backend
           image: eventmanager-backend
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://mysql-service:3306/eventdb"
+              value: "jdbc:mysql://mysql:3306/eventdb"
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
@@ -42,7 +42,7 @@ spec:
         app: eventmanager-frontend
     spec:
       containers:
-      - name: frontend
+      - name: eventmanager-frontend
         image: eventmanager-frontend # Usa el nombre de la imagen
         imagePullPolicy: Never  
         ports:
